@@ -251,7 +251,7 @@ public class ObjectAdapter {
 
     /**
      * *
-     * Fetches field information for the current Odoo object this adapter is
+     * Fetches field information for the current Odoo object thifs adapter is
      * linked to
      *
      * @return FieldCollecton data for all fields of the object

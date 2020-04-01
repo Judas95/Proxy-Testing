@@ -3,22 +3,44 @@ package com.odoojava.api.testing;
 public class Factura {
 
 	private int invoiceId;
+	private float untaxedAmount;
+	private float taxAmount;
 	private float totalAmount;
-	private int tax;
 	private Cliente client;
 	
 	
-	public Factura(int invoiceId, float totalAmount, int tax, Cliente client) {
+	public Factura(int invoiceId,  float untaxedAmount, float taxAmount, float totalAmount,Cliente client) {
 		super();
 		this.invoiceId = invoiceId;
 		this.totalAmount = totalAmount;
-		this.tax = tax;
+		this.taxAmount = taxAmount;
 		this.client = client;
+		this.untaxedAmount = untaxedAmount;
 	}
 
 
 	public int getInvoiceId() {
 		return invoiceId;
+	}
+
+
+	public float getUntaxedAmount() {
+		return untaxedAmount;
+	}
+
+
+	public void setUntaxedAmount(float untaxedAmount) {
+		this.untaxedAmount = untaxedAmount;
+	}
+
+
+	public float getTaxAmount() {
+		return taxAmount;
+	}
+
+
+	public void setTaxAmount(float taxAmount) {
+		this.taxAmount = taxAmount;
 	}
 
 
@@ -36,15 +58,6 @@ public class Factura {
 		this.totalAmount = totalAmount;
 	}
 
-
-	public int getTax() {
-		return tax;
-	}
-
-
-	public void setTax(int tax) {
-		this.tax = tax;
-	}
 
 
 	public Cliente getClient() {
