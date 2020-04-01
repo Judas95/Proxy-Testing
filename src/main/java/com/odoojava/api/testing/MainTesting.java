@@ -1,6 +1,7 @@
 package com.odoojava.api.testing;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -19,7 +20,7 @@ import com.odoojava.api.Session;
 
 public class MainTesting {
 	
-	static Session openERPSession = new Session("192.168.1.54", 8069, "ProyectoEmpresa", "zascazasca95@gmail.com", "1234");
+	static Session openERPSession = new Session("192.168.56.102", 8069, "ProyectoEmpresa", "zascazasca95@gmail.com", "1234");
 	static ObjectAdapter partnerAd;
 	static ObjectAdapter reseando;
 	static Scanner scan = new Scanner(System.in);
@@ -67,54 +68,67 @@ private static void checkClients() throws XmlRpcException, OdooApiException, NoS
     		mapper = new ObjectMapper();
     		String json = mapper.writeValueAsString(row.get("invoice_ids"));   		    		    		
     		json = json.replace("[", "");
-    		json = json.replace("]", "");   		
-    		String[] invoicesIdsArray= json.split(",");
-
-    		client = new Cliente();
-    		client.setVat(String.valueOf(row.get("vat")));
-       		client.setName(String.valueOf(row.get("name")));
-    		client.setEmail(String.valueOf(row.get("email")));    	
-    		
-    		System.out.println(client.getVat());
-    		System.out.println(client.getName());
-    		System.out.print(client.getEmail());
-    		
-    		Object[] objectIds = new Object[invoicesIdsArray.length];
-    		for (int i = 0; i < invoicesIdsArray.length; i++) {
-    			if(invoicesIdsArray[i].equalsIgnoreCase("null")) {
-    				System.out.println("No tiene facturas a su nombre");
-    			}else {
-    				objectIds[i] = Integer.parseInt(invoicesIdsArray[i]);    				
-    			}
+    		json = json.replace("]", "");   
+    		if(json.contains("null")){
+    			System.out.println("No tiene"); 		
+    		}else {
+    			String[] invoicesIdsArray= json.split(",");
     			
-			}
-    		
-    			
-    		
-    		
-    		
-    		if(objectIds != null) {
-    			RowCollection invoices = partnerAd.readObject(objectIds, new String[]{"amount_untaxed","amount_tax","amount_total"});
-        		invoicesArray = new ArrayList<Factura>();
-        		for (Row row2 : invoices) {			
-        			invoicesArray.add(new Factura(row2.getID(),
-        										  Float.parseFloat(String.valueOf(row2.get("amount_untaxed"))),
-        										  Float.parseFloat(String.valueOf(row2.get("amount_tax"))),
-        										  Float.parseFloat(String.valueOf(row2.get("amount_total"))), 
-        										  client));
-    				
-    			}
-        		client.setFacturas(invoicesArray);
- 
-        		for (Factura factura : invoicesArray) {
-    				System.out.println(factura.getInvoiceId());
-    				System.out.println(factura.getUntaxedAmount());
-    				System.out.println(factura.getTaxAmount());
-    				System.out.println(factura.getTotalAmount());
-    				
-    			}
+    			client = new Cliente();
+        		client.setVat(String.valueOf(row.get("vat")));
+           		client.setName(String.valueOf(row.get("name")));
+        		client.setEmail(String.valueOf(row.get("email")));
+        		client.setIdcliente(row.getID());
         		
-    		} 
+        		System.out.println(client.getVat());
+        		System.out.println(client.getName());
+        		System.out.print(client.getEmail());
+        		System.out.println(client.getIdcliente());
+    			
+    			Object[] objectIds = new Object[invoicesIdsArray.length];
+    			
+        		for (int i = 0; i < invoicesIdsArray.length; i++) {        					
+        				objectIds[i] = Integer.parseInt(invoicesIdsArray[i]);     				      			
+    			}
+//        		for (int i = 0; i < objectIds.length; i++) {
+//    				System.out.println(objectIds[i]);
+//    			}	
+        		
+    			RowCollection invoices = partnerAd.readObject(objectIds, new String[]{"amount_untaxed","amount_tax","amount_total"});
+            		invoicesArray = new ArrayList<Factura>();
+            		for (Row row2 : invoices) {			
+            			invoicesArray.add(new Factura(row2.getID(),
+            										  Float.parseFloat(String.valueOf(row2.get("amount_untaxed"))),
+            										  Float.parseFloat(String.valueOf(row2.get("amount_tax"))),
+            										  Float.parseFloat(String.valueOf(row2.get("amount_total"))), 
+            										  row.getID()));	
+        			}
+            		
+            		client.setFacturas(invoicesArray);
+            
+            		for (Factura factura : invoicesArray) {
+        				System.out.println(factura.getInvoiceId());
+        				System.out.println(factura.getUntaxedAmount());
+        				System.out.println(factura.getTaxAmount());
+        				System.out.println(factura.getTotalAmount());
+        				
+        				System.out.println(factura.getClientid());
+        			}
+    		}
+    		
+    		
+
+    		  	
+    		
+    		
+    		
+    		
+    		
+    		
+    		
+    		
+    		
+    		
     		
     	
     }
