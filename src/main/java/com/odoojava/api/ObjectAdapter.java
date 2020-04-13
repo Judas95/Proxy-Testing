@@ -906,7 +906,7 @@ public class ObjectAdapter {
      * @throws OdooApiException
      * @throws XmlRpcException
      */
-    public void createObject(final Row row) throws OdooApiException, XmlRpcException {
+    public int createObject(final Row row) throws OdooApiException, XmlRpcException {
 
         HashMap<String, Object> valueList = new HashMap<String, Object>();
         for (Field fld : row.getFields()) {
@@ -921,7 +921,8 @@ public class ObjectAdapter {
 
         row.put("id", id);
         row.changesApplied();
-
+        
+        return (int) id;
     }
 
     /**

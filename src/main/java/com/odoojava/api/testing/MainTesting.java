@@ -3,7 +3,10 @@ package com.odoojava.api.testing;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 
 import org.apache.xmlrpc.XmlRpcException;
@@ -20,9 +23,10 @@ import com.odoojava.api.Session;
 
 public class MainTesting {
 	
-	static Session openERPSession = new Session("192.168.56.102", 8069, "ProyectoEmpresa", "zascazasca95@gmail.com", "1234");
+	static Session openERPSession = new Session("192.168.1.54", 8069, "ProyectoEmpresa", "zascazasca95@gmail.com", "1234");
 	static ObjectAdapter partnerAd;
 	static ObjectAdapter reseando;
+	static ObjectAdapter productObject;
 	static Scanner scan = new Scanner(System.in);
 
 	public static void main(String[] args) throws Exception {
@@ -31,7 +35,7 @@ public class MainTesting {
 		    
 		    int options = 0;
 		    do {
-		    	System.out.println("1.Leer facturas , 2.Borrar factura ,3.Crear facturita linda ,4.factura4,5.Clientes");
+		    	System.out.println("1.Leer facturas , 2.Borrar factura ,3.Crear facturita ,4. Actualizar factura , 5.Clientes");
 		    	options = scan.nextInt();
 		    	switch(options){
 			    case 1 :
@@ -41,14 +45,16 @@ public class MainTesting {
 			    	deleteInvoice();
 			    	break;
 			    case 3 :
-			    	//createInvoice();
+			    	createInvoice();
 			    	break;
 			    case 4 :
-		    		checkproducts();
-		    		break;
+			    	updateInvoice();
+			    	break;
 			    case 5 :
 			    	checkClients();
 			    	break;
+			    
+			    	
 			    }    	
 		    }while(options != 0); 
 		}
@@ -70,7 +76,7 @@ private static void checkClients() throws XmlRpcException, OdooApiException, NoS
     		json = json.replace("[", "");
     		json = json.replace("]", "");   
     		if(json.contains("null")){
-    			System.out.println("No tiene"); 		
+    				
     		}else {
     			String[] invoicesIdsArray= json.split(",");
     			
@@ -89,19 +95,19 @@ private static void checkClients() throws XmlRpcException, OdooApiException, NoS
     			
         		for (int i = 0; i < invoicesIdsArray.length; i++) {        					
         				objectIds[i] = Integer.parseInt(invoicesIdsArray[i]);     				      			
-    			}
-//        		for (int i = 0; i < objectIds.length; i++) {
-//    				System.out.println(objectIds[i]);
-//    			}	
+    			}        		
         		
-    			RowCollection invoices = partnerAd.readObject(objectIds, new String[]{"amount_untaxed","amount_tax","amount_total"});
+    			RowCollection invoices = partnerAd.readObject(objectIds, new String[]{"amount_untaxed","amount_tax","amount_total","date_invoice","date_due"});
             		invoicesArray = new ArrayList<Factura>();
             		for (Row row2 : invoices) {			
             			invoicesArray.add(new Factura(row2.getID(),
             										  Float.parseFloat(String.valueOf(row2.get("amount_untaxed"))),
             										  Float.parseFloat(String.valueOf(row2.get("amount_tax"))),
             										  Float.parseFloat(String.valueOf(row2.get("amount_total"))), 
-            										  row.getID()));	
+            										  row.getID(),
+            										  String.valueOf(row2.get("date_invoice")),
+            										  String.valueOf(row2.get("date_due"))
+            										  ));	
         			}
             		
             		client.setFacturas(invoicesArray);
@@ -110,47 +116,96 @@ private static void checkClients() throws XmlRpcException, OdooApiException, NoS
         				System.out.println(factura.getInvoiceId());
         				System.out.println(factura.getUntaxedAmount());
         				System.out.println(factura.getTaxAmount());
-        				System.out.println(factura.getTotalAmount());
-        				
-        				System.out.println(factura.getClientid());
+        				System.out.println(factura.getTotalAmount());       			
         			}
     		}
-    		
-    		
-
-    		  	
-    		
-    		
-    		
-    		
-    		
-    		
-    		
-    		
-    		
-    		
-    		
-    	
     }
 	}
 
 //  CONTROL SHIFT C 
-//	private static void createInvoice() throws XmlRpcException, OdooApiException {
-//		// CREAR INVOICE CRACK
-//		partnerAd =  openERPSession.getObjectAdapter("account.invoice.line");
-//		reseando = openERPSession.getObjectAdapter("res.partner");
-//		int[] arrayint = new int[] {1,2,3,4,5};
-//		
-//		Row newPartner = partnerAd.getNewRow(new String[]{"name","price_unit","quantity","product_id","invoice_id","account_id","invoice_line_tax_ids"});
-//		newPartner.put("name","Drogas duras");
-//		newPartner.put("price_unit",200);
-//		newPartner.put("quantity",30);
-//		newPartner.put("product_id",14);
-//		newPartner.put("invoice_id",13);
-//		newPartner.put("account_id",480);
-//		newPartner.put("invoice_line_tax_ids",arrayint);
-//		partnerAd.createObject(newPartner);	
-//	}
+	private static void createInvoice() throws XmlRpcException, OdooApiException {
+		// CREAR INVOICE CRACK
+		Scanner scan2 = new Scanner(System.in);
+		partnerAd =  openERPSession.getObjectAdapter("account.invoice");
+		productObject =  openERPSession.getObjectAdapter("account.invoice.line");
+		reseando = openERPSession.getObjectAdapter("res.partner");
+	
+		System.out.println("Introduzca el id del cliente");
+		int id = scan.nextInt();
+		
+		System.out.println("Fecha de la factura");
+		String date_invoice = scan2.nextLine();
+		
+		System.out.println("Fecha de vencimiento");
+		String date_due = scan2.nextLine();
+				
+		Row newInvoice = partnerAd.getNewRow(new String[]{"account_id","partner_id","date_invoice","date_due"});
+		newInvoice.put("account_id",480);
+		newInvoice.put("partner_id",id);
+		newInvoice.put("date_invoice",date_invoice);
+		newInvoice.put("date_due",date_due);
+		int a = partnerAd.createObject(newInvoice);	
+		
+	    int options = 0;
+	    do {
+	    	
+	    	System.out.println("1.Añadir producto a factura. , 0.Terminar factura.");
+	    	options = scan.nextInt();
+	    	switch(options){
+		    case 1 :
+				
+				System.out.println("Descripción");
+				String description2 = scan2.nextLine();
+				
+				System.out.println("Id product");
+				int product_id = scan2.nextInt();
+				
+				System.out.println("Precio por unidad");
+				int price_unit = scan2.nextInt();
+				
+				System.out.println("Cantidad");
+				int quantity = scan2.nextInt();
+				
+				
+		    	Row newProduct = productObject.getNewRow(new String[] {"name","quantity","product_id","price_unit","account_id","invoice_id"});
+				newProduct.put("name", description2);
+				newProduct.put("quantity", quantity);
+				newProduct.put("product_id", product_id);
+				newProduct.put("price_unit", price_unit);
+				newProduct.put("account_id", 480);
+				newProduct.put("invoice_id", a);
+				int idInvoiceLine = productObject.createObject(newProduct);							
+				
+				addTax(a,idInvoiceLine);
+		    	break;	  
+		    }    	
+	    }while(options != 0); 
+	    
+	    
+	}
+	private static void addTax(int a, int idInvoiceLine) throws XmlRpcException, OdooApiException {
+		reseando = openERPSession.getObjectAdapter("res.partner");
+		partnerAd =  openERPSession.getObjectAdapter("account.invoice.line");
+		
+		FilterCollection filters = new FilterCollection();
+		filters.add("id","=",idInvoiceLine);
+		RowCollection partners = partnerAd.searchAndReadObject(filters, new String[]{"invoice_id","pricetotal","invoice_line_tax_ids"});
+
+		// You could do some validation here to see if the customer was found
+		Row AgrolaitRow = partners.get(0);
+		AgrolaitRow.put("invoice_line_tax_ids", new Object[]{1});
+		// Tell writeObject to only write changes ie the name isn't updated because it wasn't changed.
+		boolean success = partnerAd.writeObject(AgrolaitRow, true);
+
+		if (success) {
+			System.out.println("Update was successful");
+			openERPSession.executeCommand("account.invoice", "compute_taxes", new Object[]{a});
+		}
+		   
+	}
+		
+	
+
 
 	private static void deleteInvoice() throws XmlRpcException, OdooApiException {
 		// DELETE INVOICE 
@@ -164,7 +219,7 @@ private static void checkClients() throws XmlRpcException, OdooApiException, NoS
 		filters.add("id","=",id);
 		RowCollection partners = partnerAd.searchAndReadObject(filters, new String[]{"partner_id","amount_total"});
 			for (Row row : partners){				
-				//System.out.println(row.getFields());
+				
 				System.out.println("Id: " + row.getID());
 				System.out.println("partnerid:" + row.get("partner_id"));
 		    	System.out.println("Precio:" + row.get("amount_total"));		    	
@@ -178,45 +233,107 @@ private static void checkClients() throws XmlRpcException, OdooApiException, NoS
 	}
 
 	private static void readInvoice() throws XmlRpcException, OdooApiException {
-		// READ INVOICE
-		Object[] alguito = null;
-		reseando = openERPSession.getObjectAdapter("res.partner");
+		// READ INVOICE		
+		HashMap<Factura,ArrayList<InvoiceLine>> map=new HashMap<Factura,ArrayList<InvoiceLine>>();   		
+		ArrayList<InvoiceLine> invoicesLines;
+		reseando = openERPSession.getObjectAdapter("account.invoice.line");
 		partnerAd =  openERPSession.getObjectAdapter("account.invoice");		
-	    FilterCollection filters = new FilterCollection();
-	    //filters.add("customer","=",true);    
-	    RowCollection partners = partnerAd.searchAndReadObject(filters, new String[]{"partner_id","amount_total"});
-		for (Row row : partners){		
-	    	//System.out.println(row.getFields());
-	        System.out.println("Row ID: " + row.getID());
-	    	System.out.println("partnerid:" + row.get("partner_id"));
-	    	System.out.println("Precio:" + row.get("amount_total"));    	
-	    	alguito = new Object[] {row.get("partner_id")};	    	
-	    	RowCollection nombre = reseando.readObject(alguito, new String[]{"display_name"});    	
-	    	for(Row A : nombre) {
-	    		System.out.println("nombre:" + A.get("display_name"));
-	    	}
-	    }
-	} 
-								////IMPORTANTE IMPUESTOS////
-	private static void checkproducts() throws XmlRpcException, OdooApiException {
-		// TODO Auto-generated method stub
-		reseando = openERPSession.getObjectAdapter("res.partner");
-		partnerAd =  openERPSession.getObjectAdapter("account.invoice.line");
+		FilterCollection filtersInvoices = new FilterCollection();
+		FilterCollection filtersLine;
+		RowCollection lines;
+	    RowCollection invoices = partnerAd.searchAndReadObject(filtersInvoices, new String[]{"partner_id",
+				"vendor_display_name",
+				"amount_total","amount_tax",
+				"amount_untaxed","date_invoice",
+				"date_due"});	   
 		
-		FilterCollection filters = new FilterCollection();
-		filters.add("id","=",14);
-		RowCollection partners = partnerAd.searchAndReadObject(filters, new String[]{"invoice_id","pricetotal","invoice_line_tax_ids"});
+		for (Row row : invoices){			
+			System.out.println(row.getID());
+			invoicesLines = new ArrayList<InvoiceLine>();	
+			filtersLine = new FilterCollection();
+			filtersLine = new FilterCollection();
+			filtersLine.add("invoice_id","=",row.getID());    			
+			lines = reseando.searchAndReadObject(filtersLine, new String[] {"name",
+					  "quantity",
+					  "product_id",
+					  "price_unit",
+					  "account_id",
+					  "invoice_id"});			
+			for (Row row2 : lines) {		
+				System.out.println(row2.getID());
+				invoicesLines.add(new InvoiceLine(row2.getID(), 
+												  row2.get("name").toString(), 
+												  Float.parseFloat(row2.get("quantity").toString()), 
+												  Integer.parseInt(row2.get("product_id").toString()), 
+												  Float.parseFloat(row2.get("price_unit").toString()),
+												  Integer.parseInt(row2.get("account_id").toString()), 
+												  row.getID()));				
+			}						
+			map.put(new Factura(row.getID(), 
+					Float.parseFloat(row.get("amount_untaxed").toString()), 
+					Float.parseFloat(row.get("amount_tax").toString()), 
+					Float.parseFloat(row.get("amount_total").toString()), 
+					Integer.parseInt(row.get("partner_id").toString()),
+					row.get("date_invoice").toString(), 
+					row.get("date_due").toString()), invoicesLines);   
+	    }
+		
+		for (Entry entry : map.entrySet()) {
+			System.out.println(entry.getKey().toString());
+			System.out.println("Productos: ");	
+			System.out.println(entry.getValue().toString());			
+			System.out.println("-------------------------");
+		}
 
-		// You could do some validation here to see if the customer was found
+	} 
+
+	
+	public static void updateInvoice() throws OdooApiException, XmlRpcException {
+		// DELETE INVOICE 
+		Scanner scan2 = new Scanner(System.in);
+		partnerAd = openERPSession.getObjectAdapter("account.invoice");	
+		System.out.println("Introduzca el id de la factura");
+		int invoiceId = scan.nextInt();
+		
+		
+		FilterCollection filters = new FilterCollection();		
+		filters.add("id","=",invoiceId);
+		RowCollection partners = partnerAd.searchAndReadObject(filters, new String[]{"partner_id",
+																					"vendor_display_name",
+																					"amount_total","amount_tax",
+																					"amount_untaxed","date_invoice",
+																					"date_due"});
 		Row AgrolaitRow = partners.get(0);
-		AgrolaitRow.put("invoice_line_tax_ids", new Object[]{1});
+		Factura invoice = new Factura(AgrolaitRow.getID(), 
+				Float.parseFloat(AgrolaitRow.get("amount_untaxed").toString()), 
+				Float.parseFloat(AgrolaitRow.get("amount_tax").toString()), 
+				Float.parseFloat(AgrolaitRow.get("amount_total").toString()), 
+				Integer.parseInt(AgrolaitRow.get("partner_id").toString()),
+				AgrolaitRow.get("date_invoice").toString(), 
+				AgrolaitRow.get("date_due").toString());
+		
+		System.out.println("Cliente: "+ AgrolaitRow.get("vendor_display_name"));
+		System.out.println("Sin impuestos: " + invoice.getUntaxedAmount());
+		System.out.println("Total del impuesto: " + invoice.getTaxAmount());
+		System.out.println("Total: " + invoice.getTotalAmount());
+		System.out.println("Fecha de la factura: "+ invoice.getDate_invoice());
+		System.out.println("Fecha de vencimiento: "+ invoice.getDate_due());
+		
+		
+		System.out.println("Introduzca el nuevo id del cliente");
+		int newId = scan.nextInt();
+		System.out.println("Introduzca la fecha de vencimiento ");
+		String date = scan2.nextLine();
+		
+		AgrolaitRow.put("partner_id", newId);
+		AgrolaitRow.put("date_due", date);
+		
 		// Tell writeObject to only write changes ie the name isn't updated because it wasn't changed.
 		boolean success = partnerAd.writeObject(AgrolaitRow, true);
-
+		
 		if (success)
 		    System.out.println("Update was successful");
 	}
-	
 	
 	
 	}
