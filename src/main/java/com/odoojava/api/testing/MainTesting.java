@@ -21,7 +21,7 @@ import com.odoojava.api.Session;
 
 public class MainTesting {
 	
-	static Session openERPSession = new Session("192.168.1.54", 8069, "ProyectoEmpresa", "zascazasca95@gmail.com", "1234");
+	static Session openERPSession = new Session("192.168.1.57", 8069, "Testing", "carlosha98@gmail.com", "1234");
 	static Scanner scan = new Scanner(System.in);
 	static Scanner scan2 = new Scanner(System.in);
 	public static void main(String[] args) throws Exception {
@@ -171,7 +171,7 @@ public class MainTesting {
 		return newProduct;
 	}
 
-	private static Row prepareNewInvoiceRow(int id, String date_invoice, String date_due, ObjectAdapter invoiceObjectAdapter) throws XmlRpcException, OdooApiException {
+	public static Row prepareNewInvoiceRow(int id, String date_invoice, String date_due, ObjectAdapter invoiceObjectAdapter) throws XmlRpcException, OdooApiException {
 		Row newInvoice = invoiceObjectAdapter.getNewRow(new String[]{"account_id","partner_id","date_invoice","date_due"});
 		newInvoice.put("account_id",480);
 		newInvoice.put("partner_id",id);

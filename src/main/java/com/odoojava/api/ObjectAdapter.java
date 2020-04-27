@@ -103,7 +103,7 @@ public class ObjectAdapter {
         // If you can't find the object name, reload the cache. Somebody may
         // have added a new module after the cache was created
         // Ticket #1 from sourceforge
-
+    	modelNameCache.clear();
         Object[] ids = null;
         if (objectNameCache.indexOf(modelName) < 0) {
             clearModelNameCache();
@@ -114,6 +114,7 @@ public class ObjectAdapter {
                 Object[] result = command.readObject("ir.model", ids, new String[]{"model"});
                 for (Object row : result) {
                     objectNameCache.add(((HashMap<String, Object>) row).get("model").toString());
+                    System.out.println(row.toString());
                 }
             }
 
