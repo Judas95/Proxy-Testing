@@ -22,6 +22,8 @@ import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 /**
  * Wrapper class for Odoo commands. It uses the session object to make the call,
  * but builds the parameters in this class
@@ -52,8 +54,9 @@ public class OdooCommand {
      * applied.
      * @return Response that need to be parsed from the calling method to check
      * if successful and then adapt the result as an array.
+     * @throws JsonProcessingException 
      */
-    public Response searchObject(String objectName, Object[] filter) throws XmlRpcException {
+    public Response searchObject(String objectName, Object[] filter) throws XmlRpcException, JsonProcessingException {
         return (Response) searchObject(objectName, filter, -1, -1, null, false);
     }
 
@@ -71,8 +74,9 @@ public class OdooCommand {
      * @return If count = true, a integer is returned, otherwise a Response is
      * returned and could be parsed as Object[] of IDs if response is
      * successfull
+     * @throws JsonProcessingException 
      */
-    public Response searchObject(String objectName, Object[] filter, int offset, int limit, String order, boolean count) throws XmlRpcException {
+    public Response searchObject(String objectName, Object[] filter, int offset, int limit, String order, boolean count) throws XmlRpcException, JsonProcessingException {
         Object offsetParam = offset < 0 ? false : offset;
         Object limitParam = limit < 0 ? false : limit;
         Object orderParam = order == null || order.length() == 0 ? false : order;
@@ -84,9 +88,14 @@ public class OdooCommand {
         try {
             //TODO: test differents version with search on quantity on products
             //with location_id in the context to check that it works or not
-            Response response = (this.session.getServerVersion().getMajor() < 10) 
-                    ? new Response(session.executeCommand(objectName, "search", params))
-                    : new Response(session.executeCommandWithContext(objectName, "search", params));
+        	int major = this.session.getServerVersion().getMajor();
+            Response response = (major < 10 || major == 13) 
+            ? new Response(session.executeCommand(objectName, "search", params))
+            : new Response(session.executeCommandWithContext(objectName, "search", params));
+
+//            Response response = (this.session.getServerVersion().getMajor() > 10) 
+//                    ? new Response(session.executeCommand(objectName, "search", params))
+//                    : new Response(session.executeCommandWithContext(objectName, "search", params));
            
             return response;
         } catch (XmlRpcException e) {
@@ -125,8 +134,9 @@ public class OdooCommand {
      * @param fields List of fields to return data for
      * @returnA collection of rows for an Odoo object
      * @throws XmlRpcException
+     * @throws JsonProcessingException 
      */
-    public Object[] readObject(String objectName, Object[] ids, String[] fields) throws XmlRpcException {
+    public Object[] readObject(String objectName, Object[] ids, String[] fields) throws XmlRpcException, JsonProcessingException {
         Object[] readResult;
         if (this.session.getServerVersion().getMajor() >= 8) {
             readResult = (Object[]) session.executeCommandWithContext(objectName, "read", new Object[]{ids, fields});
@@ -146,9 +156,10 @@ public class OdooCommand {
      * @param valueList Field/Value pairs to update on the object
      * @return True if the update was successful
      * @throws XmlRpcException
+     * @throws JsonProcessingException 
      */
-    public boolean writeObject(String objectName, int id, Map<String, Object> valueList) throws XmlRpcException {
-        if (this.session.getServerVersion().getMajor() < 10) {
+    public boolean writeObject(String objectName, int id, Map<String, Object> valueList) throws XmlRpcException, JsonProcessingException {
+        if (this.session.getServerVersion().getMajor() > 10) {
             //Prior to the v10, each version have to be adapted if needed
             //Some methods on certains class from v8 to v9 don't respect the syntax
             return (Boolean) session.executeCommand(objectName, "write", new Object[]{id, valueList});
@@ -214,10 +225,11 @@ public class OdooCommand {
      * @param values Map of values to assign to the new object
      * @return The database ID of the new object
      * @throws XmlRpcException
+     * @throws JsonProcessingException 
      */
-    public Object createObject(String objectName, Map<String, Object> values) throws XmlRpcException {
+    public Object createObject(String objectName, Map<String, Object> values) throws XmlRpcException, JsonProcessingException {
         Object readResult;
-        if (this.session.getServerVersion().getMajor() < 10) {
+        if (this.session.getServerVersion().getMajor() > 10) {
             readResult = (Object) session.executeCommand(objectName, "create", new Object[]{values});
         } else {
             readResult = (Object) session.executeCommandWithContext(objectName, "create", new Object[]{values});

@@ -11,6 +11,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.odoojava.api.Session;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.odoojava.api.DemoDbGetter.DemoDbInfoRequester;
 import com.odoojava.api.OdooXmlRpcProxy.RPCProtocol;
 
@@ -51,12 +52,12 @@ public class ReportAdapterTest {
 	}
 
 	@Test(expected = com.odoojava.api.OdooApiException.class)
-	public void testBadReportAdapter() throws OdooApiException, XmlRpcException {
+	public void testBadReportAdapter() throws OdooApiException, XmlRpcException, JsonProcessingException {
 		reportAdapter = session.getReportAdapter("account.invoice.bad.value");
 	}
 
 	@Test
-	public void testGoodReportAdapter() {
+	public void testGoodReportAdapter() throws JsonProcessingException {
 		try {
 			reportAdapter = session.getReportAdapter("account.report_invoice");
 		} catch (OdooApiException | XmlRpcException e) {

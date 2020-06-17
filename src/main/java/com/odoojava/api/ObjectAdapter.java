@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 
 import org.apache.xmlrpc.XmlRpcException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.odoojava.api.Field.FieldType;
 import com.odoojava.api.helpers.FilterHelper;
 
@@ -74,13 +75,14 @@ public class ObjectAdapter {
      * @param modelName Model name that this adapter will work for.
      * @throws XmlRpcException
      * @throws OdooApiException
+     * @throws JsonProcessingException 
      */
-    public ObjectAdapter(Session session, String modelName) throws XmlRpcException, OdooApiException {
+    public ObjectAdapter(Session session, String modelName) throws XmlRpcException, OdooApiException, JsonProcessingException {
         this(new OdooCommand(session), modelName, session.getServerVersion());
     }
 
     ObjectAdapter(OdooCommand command, String modelName, Version serverVersion)
-            throws OdooApiException, XmlRpcException {
+            throws OdooApiException, XmlRpcException, JsonProcessingException {
         this.command = command;
         this.modelName = modelName;
         this.serverVersion = serverVersion;
@@ -97,9 +99,10 @@ public class ObjectAdapter {
      *
      * @param command Command object to use
      * @throws OdooApiException If the model could not be validated
+     * @throws JsonProcessingException 
      */
     @SuppressWarnings("unchecked")
-    synchronized void validateModelExists() throws OdooApiException, XmlRpcException {
+    synchronized void validateModelExists() throws OdooApiException, XmlRpcException, JsonProcessingException {
         // If you can't find the object name, reload the cache. Somebody may
         // have added a new module after the cache was created
         // Ticket #1 from sourceforge
@@ -114,7 +117,7 @@ public class ObjectAdapter {
                 Object[] result = command.readObject("ir.model", ids, new String[]{"model"});
                 for (Object row : result) {
                     objectNameCache.add(((HashMap<String, Object>) row).get("model").toString());
-                    System.out.println(row.toString());
+                   
                 }
             }
 
@@ -129,7 +132,7 @@ public class ObjectAdapter {
         objectNameCache.clear();
     }
 
-    private void checkSignalExists(String signal) throws OdooApiException {
+    private void checkSignalExists(String signal) throws OdooApiException, JsonProcessingException {
         // If you can't find the signal, reload the cache. Somebody may have
         // added a new module after the cache was created
         String signalCombo = modelName + "#" + signal;
@@ -152,7 +155,7 @@ public class ObjectAdapter {
     }
 
     @SuppressWarnings("unchecked")
-    private static void refreshSignalCache(OdooCommand command) throws OdooApiException {
+    private static void refreshSignalCache(OdooCommand command) throws OdooApiException, JsonProcessingException {
         signalCache.clear();
         try {
             Response response = command.searchObject("workflow.transition", new Object[]{});
@@ -216,8 +219,9 @@ public class ObjectAdapter {
      * @return A collection of rows for an Odoo object
      * @throws XmlRpcException
      * @throws OdooApiException
+     * @throws JsonProcessingException 
      */
-    public RowCollection readObject(Object[] ids, String[] fields) throws XmlRpcException, OdooApiException {
+    public RowCollection readObject(Object[] ids, String[] fields) throws XmlRpcException, OdooApiException, JsonProcessingException {
 
         // Faster to do read existing fields that to do a server call again
         FieldCollection fieldCol = new FieldCollection();
@@ -433,7 +437,7 @@ public class ObjectAdapter {
         return null;
     }
 
-    private Object[] fixImportData(Row inputRow) throws OdooApiException, XmlRpcException {
+    private Object[] fixImportData(Row inputRow) throws OdooApiException, XmlRpcException, JsonProcessingException {
 
         // +1 because we need to include the ID field
         Object[] outputRow = new Object[inputRow.getFields().size() + 1];
@@ -586,8 +590,9 @@ public class ObjectAdapter {
      * @return If the import was successful
      * @throws XmlRpcException
      * @throws OdooApiException
+     * @throws JsonProcessingException 
      */
-    public boolean importData(RowCollection rows) throws OdooApiException, XmlRpcException {
+    public boolean importData(RowCollection rows) throws OdooApiException, XmlRpcException, JsonProcessingException {
         // Workaround: old and new rows can't be sent together
         // together using the import_data or load function
         if (this.serverVersion.getMajor() >= 7) {
@@ -695,8 +700,9 @@ public class ObjectAdapter {
      * @return The number of record count.
      * @throws XmlRpcException
      * @throws OdooApiException
+     * @throws JsonProcessingException 
      */
-    public int getObjectCount(FilterCollection filter) throws XmlRpcException, OdooApiException {
+    public int getObjectCount(FilterCollection filter) throws XmlRpcException, OdooApiException, JsonProcessingException {
         Integer count =0 ;
         Object[] preparedFilters = validateFilters(filter);
         
@@ -718,9 +724,10 @@ public class ObjectAdapter {
      * @return A collection of rows for an Odoo object
      * @throws XmlRpcException
      * @throws OdooApiException
+     * @throws JsonProcessingException 
      */
     public RowCollection searchAndReadObject(FilterCollection filter, String[] fields)
-            throws XmlRpcException, OdooApiException {
+            throws XmlRpcException, OdooApiException, JsonProcessingException {
         return searchAndReadObject(filter, fields, -1, -1, "");
     }
 
@@ -737,9 +744,10 @@ public class ObjectAdapter {
      * @return A collection of rows for an Odoo object
      * @throws XmlRpcException
      * @throws OdooApiException
+     * @throws JsonProcessingException 
      */
     public RowCollection searchAndReadObject(final FilterCollection filter, final String[] fields, int offset,
-            int limit, String order) throws XmlRpcException, OdooApiException {
+            int limit, String order) throws XmlRpcException, OdooApiException, JsonProcessingException{
 
         String[] fieldArray = fields == null ? new String[]{} : fields;
         Object[] preparedFilters = validateFilters(filter);
@@ -831,9 +839,10 @@ public class ObjectAdapter {
      * was successful
      * @throws OdooApiException
      * @throws XmlRpcException
+     * @throws JsonProcessingException 
      */
     public Boolean[] writeObject(final RowCollection rows, final boolean changesOnly)
-            throws OdooApiException, XmlRpcException {
+            throws OdooApiException, XmlRpcException, JsonProcessingException {
         Boolean[] returnValues = new Boolean[rows.size()];
 
         for (int i = 0; i < rows.size(); i++) {
@@ -851,9 +860,10 @@ public class ObjectAdapter {
      * @param changesOnly Only changed values will be submitted to the database.
      * @return If the update was successful
      * @throws OdooApiException
+     * @throws JsonProcessingException 
      * @throws XmlRpcException
      */
-    public boolean writeObject(final Row row, boolean changesOnly) throws OdooApiException {
+    public boolean writeObject(final Row row, boolean changesOnly) throws OdooApiException, JsonProcessingException {
 
         Object idObj = row.get("id");
 
@@ -906,8 +916,9 @@ public class ObjectAdapter {
      * @param row Data row read data from to create the Object
      * @throws OdooApiException
      * @throws XmlRpcException
+     * @throws JsonProcessingException 
      */
-    public int createObject(final Row row) throws OdooApiException, XmlRpcException {
+    public int createObject(final Row row) throws OdooApiException, XmlRpcException, JsonProcessingException {
 
         HashMap<String, Object> valueList = new HashMap<String, Object>();
         for (Field fld : row.getFields()) {
@@ -1038,8 +1049,9 @@ public class ObjectAdapter {
      * @param signal Signal name to send
      * @throws XmlRpcException
      * @throws OdooApiException
+     * @throws JsonProcessingException 
      */
-    public void executeWorkflow(Row row, String signal) throws XmlRpcException, OdooApiException {
+    public void executeWorkflow(Row row, String signal) throws XmlRpcException, OdooApiException, JsonProcessingException {
         // Sanity check
         checkSignalExists(signal);
 

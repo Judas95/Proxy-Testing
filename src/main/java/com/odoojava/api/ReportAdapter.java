@@ -36,6 +36,7 @@ import java.util.stream.Stream;
 
 import org.apache.xmlrpc.XmlRpcException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.odoojava.api.Field.FieldType;
 import com.odoojava.api.helpers.FilterHelper;
 
@@ -60,7 +61,7 @@ public class ReportAdapter {
 	 */
 	private static final HashMap<String, Object[]> reportListCache = new HashMap<String, Object[]>();
 
-	public ReportAdapter(Session session) throws XmlRpcException {
+	public ReportAdapter(Session session) throws XmlRpcException, JsonProcessingException {
 		super();
 		this.session = session;
 		this.serverVersion = session.getServerVersion();
@@ -77,7 +78,7 @@ public class ReportAdapter {
 	 * list later to check the existence of the report and its type. Appropriate
 	 * methods will be possible regarding the type
 	 */
-	private void getReportList() throws XmlRpcException, OdooApiException {
+	private void getReportList() throws XmlRpcException, OdooApiException, JsonProcessingException {
 		reportListCache.clear();
 		ObjectAdapter objectAd = this.session.getObjectAdapter("ir.actions.report.xml");
 		FilterCollection filters = new FilterCollection();
@@ -95,8 +96,9 @@ public class ReportAdapter {
 	 * @return
 	 * @throws XmlRpcException
 	 * @throws OdooApiException
+	 * @throws JsonProcessingException 
 	 */
-	public byte[] getReportAsByte(String reportName, Object[] ids) throws XmlRpcException, OdooApiException {
+	public byte[] getReportAsByte(String reportName, Object[] ids) throws XmlRpcException, OdooApiException, JsonProcessingException {
 		checkReportName(reportName);
 		byte[] reportDatas = session.executeReportService(reportName, ids);
 		return reportDatas;
@@ -111,8 +113,9 @@ public class ReportAdapter {
 	 *            can be found in Technical > report > report
 	 * @throws OdooApiException
 	 * @throws XmlRpcException
+	 * @throws JsonProcessingException 
 	 */
-	private void checkReportName(String reportName) throws OdooApiException, XmlRpcException {
+	private void checkReportName(String reportName) throws OdooApiException, XmlRpcException, JsonProcessingException {
 		// TODO Auto-generated method stub
 		// refresh
 		getReportList();
@@ -131,7 +134,7 @@ public class ReportAdapter {
 
 	}
 
-	public void setReport(String reportName) throws OdooApiException, XmlRpcException {
+	public void setReport(String reportName) throws OdooApiException, XmlRpcException, JsonProcessingException {
 		checkReportName(reportName);
 		Object[] report = reportListCache.get(reportName);
 		this.report = report;

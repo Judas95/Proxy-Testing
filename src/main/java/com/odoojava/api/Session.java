@@ -27,6 +27,8 @@ import org.apache.xmlrpc.XmlRpcException;
 
 import com.odoojava.api.OdooXmlRpcProxy.RPCProtocol;
 import com.odoojava.api.OdooXmlRpcProxy.RPCServices;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.odoojava.api.OdooApiException;
 import java.util.Arrays;
 
@@ -117,8 +119,9 @@ public class Session {
 	 * making a call to the server
 	 *
 	 * @return
+	 * @throws JsonProcessingException 
 	 */
-	public ObjectAdapter getObjectAdapter(String objectName) throws XmlRpcException, OdooApiException {
+	public ObjectAdapter getObjectAdapter(String objectName) throws XmlRpcException, OdooApiException, JsonProcessingException {
 		return new ObjectAdapter(this, objectName);
 	}
 	/**
@@ -161,8 +164,9 @@ public class Session {
 	 * @return reportAdapter initialized with 
 	 * @throws OdooApiException
 	 * @throws XmlRpcException
+	 * @throws JsonProcessingException 
 	 */
-	public ReportAdapter getReportAdapter(String reportName) throws OdooApiException, XmlRpcException {
+	public ReportAdapter getReportAdapter(String reportName) throws OdooApiException, XmlRpcException, JsonProcessingException {
 		ReportAdapter reportAdapter = new ReportAdapter(this);
 		reportAdapter.setReport(reportName);
 		return reportAdapter;
@@ -300,6 +304,10 @@ public class Session {
 		}
 		return objectClient.execute("execute", params);
 	}
+	
+	
+	
+
 
 	/**
 	 * Executes any command on the server linked to the /xmlrpc/object service.
@@ -315,9 +323,10 @@ public class Session {
 	 *            the OdooCommand object or ObjectAdapter
 	 * @return The result of the call
 	 * @throws XmlRpcException
+	 * @throws JsonProcessingException 
 	 */
 	public Object executeCommandWithContext(final String objectName, final String commandName,
-			final Object[] parameters) throws XmlRpcException {
+			final Object[] parameters) throws XmlRpcException, JsonProcessingException {
 		Object[] connectionParams = new Object[] { databaseName, userID, password, objectName, commandName };
 
 		// Combine the parameters with the context
@@ -326,6 +335,7 @@ public class Session {
 			System.arraycopy(parameters, 0, params, 0, parameters.length);
 		}
 		System.arraycopy(new Object[] { getContext() }, 0, params, parameters.length, 1);
+		
 		return executeCommand(objectName, commandName, params);
 	}
 

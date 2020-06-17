@@ -5,6 +5,7 @@ import com.odoojava.api.OdooApiException;
 import com.odoojava.api.Row;
 import com.odoojava.api.OdooCommand;
 import com.odoojava.api.ObjectAdapter;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.odoojava.api.FieldCollection;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -25,7 +26,7 @@ public class ObjectAdapterTest {
 
 	private final class TestAdapter extends ObjectAdapter {
 
-		public TestAdapter() throws OdooApiException, XmlRpcException {
+		public TestAdapter() throws OdooApiException, XmlRpcException, JsonProcessingException {
 			super(null, null, null);
 		}
 
